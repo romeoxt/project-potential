@@ -9,6 +9,8 @@ const PgSession = require('connect-pg-simple')(session);
 
 const indexRouter = require('./routes/index');
 const authRoutes = require('./src/routes/auth');
+const bookRoutes = require('./src/routes/books');
+const { requireAuth, requireAdmin } = require('./src/middleware/auth');
 const { pool } = require('./src/services/postgres');
 
 const app = express();
@@ -48,6 +50,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // api routes
 app.use('/api/auth', authRoutes);
+app.use('/api/books', requireAuth, bookRoutes);
 
 app.use('/', indexRouter);
 
