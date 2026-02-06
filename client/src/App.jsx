@@ -215,6 +215,14 @@ function App() {
     }
   }, [user]);
 
+  // tried auto searching on keystroke but it fires way too much
+  // and the results come back out of order sometimes
+  // useEffect(function() {
+  //   if (user && (search || category)) {
+  //     loadBooks(1);
+  //   }
+  // }, [search, category]);
+
   async function handleAuthSubmit(e) {
     e.preventDefault();
     setAuthError('');
@@ -261,6 +269,8 @@ function App() {
     setSearch(e.target.value);
   }
 
+  // was just calling loadBooks() here before but it kept the old page number
+  // so youd get empty results after paging then searching
   function handleApplyClick() {
     setPage(1);
     loadBooks(1);

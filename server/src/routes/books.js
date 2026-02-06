@@ -88,7 +88,7 @@ router.get('/search', async function searchBooks(req, res, next) {
     }
 
     if (q) {
-      // **** switch to text index
+      // **** this breaks if someone types brackets or parens, need to escape or use text index
       const regex = new RegExp(q, 'i');
       filter.$or = [{ title: regex }, { author: regex }, { isbn: regex }];
     }
