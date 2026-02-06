@@ -1,6 +1,7 @@
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const helmet = require('helmet');
@@ -52,18 +53,46 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/auth', authRoutes);
 app.use('/api/books', requireAuth, bookRoutes);
 
-app.use('/', indexRouter);
+// admin pages, auth is handled per route
+app.use('/admin', indexRouter);
+
+app.use(function apiErrorHandler(err, req, res, next) {
+  if (req.originalUrl.indexOf('/api') !== 0) {
+    return next(err);
+  }
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+app.use('/api', function apiNotFound(req, res) {
+  res.status(404).json({ error: 'Not found' });
+});
+
+
+// serve react build if it exists, vite handles this in dev
+const clientBuildPath = path.join(__dirname, '..', 'client', 'dist');
+if (fs.existsSync(clientBuildPath)) {
+  app.use(express.static(clientBuildPath));
+  app.get('*', function serveReact(req, res, next) {
+    if (req.originalUrl.indexOf('/admin') === 0 || req.originalUrl.indexOf('/api') === 0) {
+      return next();
+    }
+    res.sendFile(path.join(clientBuildPath, 'index.html'));
+  });
+}
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function handleNotFound(req, res, next) {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function handleError(err, req, res, next) {
+  // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
+  // render the error page
   res.status(err.status || 500);
   res.render('error');
 });

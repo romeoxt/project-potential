@@ -1,0 +1,33 @@
+<h1>edit book</h1>
+
+{{#if error}}
+<p class="error-msg">{{error}}</p>
+{{/if}}
+
+<form method="POST" action="/admin/books/{{book._id}}/edit">
+  <label>title</label>
+  <input type="text" name="title" value="{{book.title}}" required />
+  <br>
+  <label>author</label>
+  <input type="text" name="author" value="{{book.author}}" required />
+  <br>
+  <label>isbn</label>
+  <input type="text" name="isbn" value="{{book.isbn}}" required />
+  <br>
+  <label>category</label>
+  <select name="category" required>
+    {{#each categories}}
+    <option value="{{this.name}}" {{#if this.selected}}selected{{/if}}>{{this.name}}</option>
+    {{/each}}
+  </select>
+  <br>
+  <label>collection</label>
+  <select name="collection_id" required>
+    {{#each collections}}
+    <option value="{{this.id}}" {{#if this.selected}}selected{{/if}}>{{this.name}} ({{this.username}})</option>
+    {{/each}}
+  </select>
+  <br><br>
+  <button type="submit">update</button>
+  <a href="/admin/books">cancel</a>
+</form>

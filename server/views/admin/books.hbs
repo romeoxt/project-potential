@@ -1,0 +1,60 @@
+<h1>books ({{total}})</h1>
+<a href="/admin/books/add">+ add book</a>
+<br><br>
+
+<form method="GET" action="/admin/books">
+  <input type="text" name="search" value="{{search}}" placeholder="search..." />
+  <select name="category">
+    <option value="">all categories</option>
+    {{#each categories}}
+    <option value="{{this.name}}" {{#if this.selected}}selected{{/if}}>{{this.name}}</option>
+    {{/each}}
+  </select>
+  <button type="submit">filter</button>
+</form>
+<br>
+
+{{#if books.length}}
+<table>
+  <thead>
+    <tr>
+      <th>title</th>
+      <th>author</th>
+      <th>isbn</th>
+      <th>category</th>
+      <th>collection</th>
+      <th>reviews</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each books}}
+    <tr>
+      <td>{{this.title}}</td>
+      <td>{{this.author}}</td>
+      <td>{{this.isbn}}</td>
+      <td>{{this.category}}</td>
+      <td>{{this.collectionName}}</td>
+      <td>{{this.reviewCount}}</td>
+      <td>
+        <a href="/admin/books/{{this._id}}/edit">edit</a>
+        <form method="POST" action="/admin/books/{{this._id}}/delete" style="display:inline" onsubmit="return confirm('delete?')">
+          <button type="submit">delete</button>
+        </form>
+      </td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
+
+{{#if hasPrev}}
+<a href="/admin/books?page={{prevPage}}&search={{search}}&category={{category}}">&laquo; prev</a>
+{{/if}}
+page {{page}} / {{totalPages}}
+{{#if hasNext}}
+<a href="/admin/books?page={{nextPage}}&search={{search}}&category={{category}}">next &raquo;</a>
+{{/if}}
+
+{{else}}
+<p>no books found.</p>
+{{/if}}

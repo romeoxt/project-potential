@@ -5,6 +5,13 @@
     <link rel="stylesheet" href="/stylesheets/style.css" />
   </head>
   <body>
+    {{#if showNav}}
+    <nav>
+      <a href="/admin/books">books</a>
+      <a href="/admin/books/add">add</a>
+      <a href="/admin/logout">logout</a>
+    </nav>
+    {{/if}}
     {{{body}}}
   </body>
 </html>

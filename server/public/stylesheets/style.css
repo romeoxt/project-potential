@@ -1,8 +1,193 @@
 body {
-  padding: 50px;
+  padding: 20px 30px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  color: #333;
 }
 
 a {
   color: #00B7FF;
+}
+
+nav {
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+nav a {
+  margin-right: 14px;
+  text-decoration: none;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.total-count {
+  font-weight: normal;
+  color: #888;
+}
+
+/* buttons */
+.btn {
+  padding: 5px 12px;
+  background: #333;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.btn-danger {
+  background: #b33;
+}
+
+.btn-sm {
+  padding: 3px 8px;
+  font-size: 11px;
+}
+
+/* search */
+.search-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.search-bar .field {
+  display: flex;
+  flex-direction: column;
+}
+
+.search-bar label {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 2px;
+}
+
+.search-bar input,
+.search-bar select {
+  padding: 5px 8px;
+  border: 1px solid #ccc;
+  font-size: 13px;
+}
+
+.search-bar input {
+  width: 200px;
+}
+
+/* table */
+.book-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 12px;
+}
+
+.book-table th,
+.book-table td {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+  font-size: 13px;
+}
+
+.book-table th {
+  background: #f5f5f5;
+}
+
+.actions {
+  white-space: nowrap;
+}
+
+.actions .btn {
+  margin-right: 4px;
+}
+
+/* forms */
+.admin-form {
+  max-width: 400px;
+}
+
+.admin-form .field {
+  margin-bottom: 10px;
+}
+
+.admin-form label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 3px;
+}
+
+.admin-form input,
+.admin-form select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  font-size: 13px;
+}
+
+.error-msg {
+  color: #b33;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+.admin-pagination {
+  margin-top: 10px;
+}
+
+.admin-pagination span {
+  font-size: 13px;
+  color: #666;
+  margin: 0 6px;
+}
+
+/* login */
+.login-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 100px;
+}
+
+.login-box {
+  width: 280px;
+}
+
+.login-box h1 {
+  font-size: 16px;
+  margin-bottom: 14px;
+}
+
+.login-box .field {
+  margin-bottom: 10px;
+}
+
+.login-box label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 3px;
+}
+
+.login-box input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  font-size: 13px;
+}
+
+.login-box .btn {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
 }
