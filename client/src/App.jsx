@@ -66,82 +66,31 @@ function ReviewForm(props) {
   }
 
   return (
-    <form className="review-form" onSubmit={handleSubmit}>
-      <label>
-        Rating
-        <select value={rating} onChange={handleRatingChange}>
-          {ratingOptions.map(renderRatingOption)}
-        </select>
-      </label>
-      <label>
-        Comment
-        <textarea
-          rows="2"
-          value={comment}
-          onChange={handleCommentChange}
-          placeholder="Share your thoughts..."
-        />
-      </label>
-      {error && <p className="error">{error}</p>}
-      <button type="submit" disabled={saving}>
-        {saving ? 'Saving...' : 'Add Review'}
-      </button>
-    </form>
-  );
-}
-
-function Dropdown({ value, options, placeholder, onChange }) {
-  const [open, setOpen] = useState(false);
-  const dropRef = useRef(null);
-
-  useEffect(function closeOnOutsideClick() {
-    function handleClick(e) {
-      if (dropRef.current && !dropRef.current.contains(e.target)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener('click', handleClick);
-    return function cleanup() {
-      document.removeEventListener('click', handleClick);
-    };
-  }, []);
-
-  function handleToggle() {
-    setOpen(!open);
-  }
-
-  function handleSelect(val) {
-    onChange(val);
-    setOpen(false);
-  }
-
-  return (
-    <div
-      className={'dropdown' + (open ? ' expanded' : '')}
-      ref={dropRef}
-      onClick={handleToggle}
-    >
-      <div className="dropdown-selected">{value || placeholder}</div>
-      <div className="dropdown-options">
-        <div
-          className={'dropdown-option' + (!value ? ' active' : '')}
-          onClick={function(e) { e.stopPropagation(); handleSelect(''); }}
-        >
-          {placeholder}
+    <form className="reviewForm" onSubmit={handleSubmit}>
+      <div className="row">
+        <div>
+          <span className="label">Rating</span>
+          <select className="select" value={rating} onChange={handleRatingChange}>
+            {ratingOptions.map(renderRatingOption)}
+          </select>
         </div>
-        {options.map(function(opt) {
-          return (
-            <div
-              key={opt}
-              className={'dropdown-option' + (opt === value ? ' active' : '')}
-              onClick={function(e) { e.stopPropagation(); handleSelect(opt); }}
-            >
-              {opt}
-            </div>
-          );
-        })}
+        <div style={{ flex: 3 }}>
+          <span className="label">Comment</span>
+          <input
+            className="input"
+            value={comment}
+            onChange={handleCommentChange}
+            placeholder="Share your thoughts..."
+          />
+        </div>
       </div>
-    </div>
+      {error && <div className="alert alertError">{error}</div>}
+      <div>
+        <button className="btn btnPrimary" type="submit" disabled={saving}>
+          {saving ? 'Saving...' : 'Add Review'}
+        </button>
+      </div>
+    </form>
   );
 }
 
@@ -182,14 +131,17 @@ function App() {
   }
 
   // passing page directly bc setState doesnt update in time
-  async function loadBooks(p) {
+  // added overrides param later bc category clicks had the same stale state problem
+  async function loadBooks(p, overrides) {
     const currentPage = p || page;
+    const q = overrides && overrides.search !== undefined ? overrides.search : search;
+    const cat = overrides && overrides.category !== undefined ? overrides.category : category;
     setLoadingBooks(true);
     setBookError('');
     try {
       const params = new URLSearchParams();
-      if (search) params.set('q', search);
-      if (category) params.set('category', category);
+      if (q) params.set('q', q);
+      if (cat) params.set('category', cat);
       params.set('page', currentPage);
 
       const data = params.has('q') || params.has('category')
@@ -269,11 +221,17 @@ function App() {
     setSearch(e.target.value);
   }
 
+  function handleCategoryChange(e) {
+    setCategory(e.target.value);
+  }
+
   // was just calling loadBooks() here before but it kept the old page number
   // so youd get empty results after paging then searching
+  // also reset category on text search bc it was filtering and confusing
   function handleApplyClick() {
+    setCategory('');
     setPage(1);
-    loadBooks(1);
+    loadBooks(1, { category: '' });
   }
 
   const handleRefreshClick = () => loadBooks();
@@ -290,143 +248,222 @@ function App() {
     loadBooks(p);
   }
 
-  function renderReview(review) {
-    return (
-      <li key={review._id}>
-        <strong>{review.username}</strong> · {review.rating}/5
-        {review.comment && <p>{review.comment}</p>}
-      </li>
-    );
+  function renderStars(rating) {
+    let stars = '';
+    for (let i = 0; i < 5; i++) {
+      stars += i < rating ? '★' : '☆';
+    }
+    return <span className="stars">{stars}</span>;
   }
 
   function renderBook(book) {
+    const reviewCount = book.reviews?.length || 0;
+    const avgRating = reviewCount > 0
+      ? (book.reviews.reduce(function(sum, r) { return sum + r.rating; }, 0) / reviewCount).toFixed(1)
+      : null;
+
     return (
-      <article key={book._id} className="book-card">
-        <div className="book-main">
-          <h3>{book.title}</h3>
-          <p className="meta">{book.author}</p>
-          <p className="meta">ISBN: {book.isbn}</p>
-          <span className="tag">{book.category}</span>
+      <div key={book._id} className="bookCard">
+        <div className="bookHeader">
+          <div className="bookInfo">
+            <h3>{book.title}</h3>
+            <p className="bookAuthor">by {book.author}</p>
+          </div>
+          <div className="bookSide">
+            <span className="tag">{book.category}</span>
+            {avgRating && (
+              <div className="bookRating">
+                {renderStars(Math.round(avgRating))}
+                <span className="ratingNum">{avgRating}</span>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="reviews">
-          <h4>reviews</h4>
-          {book.reviews?.length ? (
-            <ul>{book.reviews.map(renderReview)}</ul>
+        <div className="bookIsbn">ISBN {book.isbn}</div>
+
+        <div className="reviewsSection">
+          <div className="reviewsHeader">
+            <h4>Reviews</h4>
+            <span className="reviewCount">{reviewCount}</span>
+          </div>
+          {reviewCount > 0 ? (
+            <ul className="reviewList">
+              {book.reviews.map(function(review) {
+                return (
+                  <li key={review._id} className="reviewItem">
+                    <div className="reviewTop">
+                      <strong>{review.username}</strong>
+                      {renderStars(review.rating)}
+                    </div>
+                    {review.comment && <p className="reviewComment">{review.comment}</p>}
+                  </li>
+                );
+              })}
+            </ul>
           ) : (
-            <p className="subtext">no reviews yet, be the first.</p>
+            <p className="subtle" style={{ fontSize: 13 }}>no reviews yet</p>
+          )}
+          <ReviewForm bookId={book._id} onCreated={loadBooks} />
+        </div>
+      </div>
+    );
+  }
+
+  // topbar shows on all views
+  function renderTopbar() {
+    return (
+      <div className="topbar">
+        <div className="topbarInner">
+          <span className="brand">book shelf</span>
+          {user && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span className="subtle">{user.username}</span>
+              <button className="linkBtn" type="button" onClick={handleLogout}>
+                Log out
+              </button>
+            </div>
           )}
         </div>
-        <ReviewForm bookId={book._id} onCreated={loadBooks} />
-      </article>
+      </div>
     );
   }
 
   if (authLoading) {
-    return <div className="container">Loading...</div>;
+    return (
+      <>
+        {renderTopbar()}
+        <div className="authWrap"><p className="subtle">Loading...</p></div>
+      </>
+    );
+  }
+
+  if (!user) {
+    return (
+      <>
+        {renderTopbar()}
+        <div className="authWrap">
+          <div className="card authCard">
+            <div className="h1">{authMode === 'login' ? 'Sign in' : 'Create account'}</div>
+            <form onSubmit={handleAuthSubmit}>
+              <div style={{ marginBottom: 12 }}>
+                <span className="label">Username</span>
+                <input
+                  className="input"
+                  type="text"
+                  value={authForm.username}
+                  onChange={handleUsernameChange}
+                  placeholder="enter username"
+                  required
+                />
+              </div>
+              <div style={{ marginBottom: 14 }}>
+                <span className="label">Password</span>
+                <input
+                  className="input"
+                  type="password"
+                  value={authForm.password}
+                  onChange={handlePasswordChange}
+                  placeholder="enter password"
+                  required
+                />
+              </div>
+              {authError && <div className="alert alertError" style={{ marginBottom: 12 }}>{authError}</div>}
+              <button className="btn btnPrimary" type="submit" style={{ width: '100%' }}>
+                {authMode === 'login' ? 'Sign in' : 'Create account'}
+              </button>
+            </form>
+            <div className="authToggle">
+              {authMode === 'login' ? "Don't have an account? " : 'Already have an account? '}
+              <button className="linkBtn" type="button" onClick={handleAuthModeToggle}>
+                {authMode === 'login' ? 'Register' : 'Sign in'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </>
+    );
   }
 
   return (
-    <div className="container">
-      <header className="header">
-        <div>
-          <h1>my book shelf</h1>
-          <p className="subtext">look around, search a bit, add thoughts when you want.</p>
+    <>
+      {renderTopbar()}
+      <div className="container">
+        <div className="searchHero">
+          <div className="glassBar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              type="text"
+              placeholder="What would you like to find today?"
+              value={search}
+              onChange={handleSearchChange}
+              onKeyDown={function(e) { if (e.key === 'Enter') handleApplyClick(); }}
+            />
+          </div>
+
+          {categories.length > 0 && (
+            <div className="glassPanel">
+              <div
+                className={'glassPanelRow' + (category === '' ? ' active' : '')}
+                onClick={function() { setCategory(''); setPage(1); loadBooks(1, { category: '' }); }}
+              >
+                <span>All Categories</span>
+                <span className="rowIcons">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+                </span>
+              </div>
+              {categories.map(function(cat) {
+                return (
+                  <div
+                    key={cat}
+                    className={'glassPanelRow' + (category === cat ? ' active' : '')}
+                    onClick={function() { setCategory(cat); setPage(1); loadBooks(1, { category: cat }); }}
+                  >
+                    <span>{cat}</span>
+                    <span className="rowIcons">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="searchActions">
+            <button className="btn btnPrimary" type="button" onClick={handleApplyClick}>
+              Search
+            </button>
+            <button className="btn" type="button" onClick={handleRefreshClick}>
+              Refresh
+            </button>
+          </div>
         </div>
-        {user && (
-          <div className="user-pill">
-            <span>{user.username}</span>
-            <button className="link-button" type="button" onClick={handleLogout}>
-              Log out
+
+        <div className="sectionHead">
+          <span className="h2">Books</span>
+        </div>
+
+        {loadingBooks && <p className="subtle">loading books...</p>}
+        {bookError && <div className="alert alertError">{bookError}</div>}
+        {!loadingBooks && books.length === 0 && <p className="subtle">Nothing here yet.</p>}
+
+        <div className="bookGrid">{books.map(renderBook)}</div>
+
+        {totalPages > 1 && (
+          <div className="pagination">
+            <button className="btn" type="button" disabled={page <= 1} onClick={handlePrevPage}>
+              Prev
+            </button>
+            <span>{page} / {totalPages}</span>
+            <button className="btn" type="button" disabled={page >= totalPages} onClick={handleNextPage}>
+              Next
             </button>
           </div>
         )}
-      </header>
-
-      {!user ? (
-        <section className="panel">
-          <h2>{authMode === 'login' ? 'sign in' : 'create account'}</h2>
-          <form className="auth-form" onSubmit={handleAuthSubmit}>
-            <label>
-              username
-              <input
-                type="text"
-                value={authForm.username}
-                onChange={handleUsernameChange}
-                required
-              />
-            </label>
-            <label>
-              password
-              <input
-                type="password"
-                value={authForm.password}
-                onChange={handlePasswordChange}
-                required
-              />
-            </label>
-            {authError && <p className="error">{authError}</p>}
-            <button type="submit">
-              {authMode === 'login' ? 'sign in' : 'create account'}
-            </button>
-          </form>
-          <button className="link-button" type="button" onClick={handleAuthModeToggle}>
-            {authMode === 'login'
-              ? "don't have an account? register"
-              : 'already have an account? sign in'}
-          </button>
-        </section>
-      ) : (
-        <>
-          <section className="panel filters">
-            <div className="field">
-              <label>search</label>
-              <input
-                type="text"
-                placeholder="Title, author, maybe an ISBN"
-                value={search}
-                onChange={handleSearchChange}
-              />
-            </div>
-            <div className="field">
-              <label>category</label>
-              <Dropdown
-                value={category}
-                options={categories}
-                placeholder="all categories"
-                onChange={setCategory}
-              />
-            </div>
-            <button type="button" onClick={handleApplyClick}>
-              apply
-            </button>
-          </section>
-
-          <section className="panel">
-            <div className="panel-header">
-              <h2>books</h2>
-              <button type="button" className="link-button" onClick={handleRefreshClick}>
-                refresh
-              </button>
-            </div>
-            {loadingBooks && <p>loading books...</p>}
-            {bookError && <p className="error">{bookError}</p>}
-            {!loadingBooks && books.length === 0 && <p>nothing here yet.</p>}
-            <div className="book-grid">{books.map(renderBook)}</div>
-            {totalPages > 1 && (
-              <div className="pagination">
-                <button type="button" disabled={page <= 1} onClick={handlePrevPage}>
-                  prev
-                </button>
-                <span>{page} / {totalPages}</span>
-                <button type="button" disabled={page >= totalPages} onClick={handleNextPage}>
-                  next
-                </button>
-              </div>
-            )}
-          </section>
-        </>
-      )}
-    </div>
+      </div>
+    </>
   );
 }
 
