@@ -9,8 +9,11 @@ const router = express.Router();
 const CATEGORIES = ['Fiction', 'Programming', 'Philosophy', 'Self Help', 'Science', 'Design', 'History', 'Systems'];
 
 function adminOnly(req, res, next) {
-  if (!req.session || !req.session.user || !req.session.user.isAdmin) {
+  if (!req.session || !req.session.user) {
     return res.redirect('/admin/login');
+  }
+  if (!req.session.user.isAdmin) {
+    return res.status(403).send('admin only');
   }
   next();
 }
@@ -22,7 +25,7 @@ router.get('/login', function(req, res) {
   if (req.session && req.session.user && req.session.user.isAdmin) {
     return res.redirect('/admin/books');
   }
-  res.render('admin/login', { layout: false, title: 'Admin Login' });
+  res.render('admin/login', { title: 'Admin Login' });
 });
 
 router.post('/login', async function(req, res) {
@@ -34,20 +37,20 @@ router.post('/login', async function(req, res) {
     );
 
     if (!result.rows.length) {
-      return res.render('admin/login', { layout: false, title: 'Admin Login', error: 'Invalid credentials' });
+      return res.render('admin/login', { title: 'Admin Login', error: 'Invalid credentials' });
     }
 
     let user = result.rows[0];
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid || !user.is_admin) {
-      return res.render('admin/login', { layout: false, title: 'Admin Login', error: 'Invalid credentials' });
+      return res.render('admin/login', { title: 'Admin Login', error: 'Invalid credentials' });
     }
 
     req.session.user = { id: user.id, username: user.username, isAdmin: user.is_admin };
     res.redirect('/admin/books');
   } catch (err) {
     console.error(err);
-    res.render('admin/login', { layout: false, title: 'Admin Login', error: 'Something went wrong' });
+    res.render('admin/login', { title: 'Admin Login', error: 'Something went wrong' });
   }
 });
 
